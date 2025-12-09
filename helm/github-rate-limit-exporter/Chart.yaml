@@ -1,0 +1,19 @@
+apiVersion: v2
+name: github-rate-limit-exporter
+description: A Helm chart for GitHub Rate Limit Exporter - Prometheus exporter for monitoring GitHub API rate limits
+type: application
+version: 1.0.0
+appVersion: "1.0.0"
+keywords:
+  - github
+  - prometheus
+  - exporter
+  - monitoring
+  - rate-limit
+home: https://github.com/l13t/github_rate_limit_exporter
+sources:
+  - https://github.com/l13t/github_rate_limit_exporter
+maintainers:
+  - name: l13t
+    url: https://github.com/l13t
+icon: https://raw.githubusercontent.com/prometheus/prometheus/main/documentation/images/prometheus-logo.svg

@@ -1,6 +1,6 @@
 # Quick Reference
 
-## 🚀 Quick Start
+##  Quick Start
 
 ```bash
 # 1. Get GitHub token from: https://github.com/settings/tokens
@@ -20,7 +20,7 @@ EOF
 curl http://localhost:9101/metrics | grep github_rate_limit
 ```
 
-## 📋 Common Commands
+##  Common Commands
 
 ### Using Task
 
@@ -40,7 +40,7 @@ go test ./...
 go run ./cmd/exporter -config config.yaml
 ```
 
-## 🐳 Docker
+##  Docker
 
 ```bash
 # Run
@@ -55,7 +55,7 @@ docker-compose logs -f
 docker-compose down
 ```
 
-## 🔧 Configuration
+##  Configuration
 
 ```yaml
 users:
@@ -69,7 +69,7 @@ metrics_path: "/metrics"  # Metrics endpoint
 poll_interval: 60         # Seconds between polls
 ```
 
-## 📊 Key Metrics
+##  Key Metrics
 
 ```promql
 # Remaining requests
@@ -82,14 +82,14 @@ github_rate_limit_core_remaining{user="username"}
 (github_rate_limit_core_reset_timestamp - time()) / 60
 ```
 
-## 🔗 Default URLs
+##  Default URLs
 
 - **Metrics**: http://localhost:9101/metrics
 - **Health**: http://localhost:9101/health
 - **Prometheus**: http://localhost:9090 (if using docker-compose)
 - **Grafana**: http://localhost:3000 (if using docker-compose)
 
-## 🆘 Troubleshooting
+##  Troubleshooting
 
 ```bash
 # Test token
@@ -106,7 +106,7 @@ journalctl -u github_rate_limit_exporter -f
 docker logs -f github_rate_limit_exporter
 ```
 
-## 🔒 Security Checklist
+##  Security Checklist
 
 - [ ] Never commit tokens to git
 - [ ] Use `chmod 600 config.yaml`
@@ -114,7 +114,7 @@ docker logs -f github_rate_limit_exporter
 - [ ] Rotate tokens regularly
 - [ ] Use secrets management in production
 
-## 📚 Full Documentation
+##  Full Documentation
 
 - [README.md](README.md) - Complete guide
 - [CONTRIBUTING.md](CONTRIBUTING.md) - How to contribute

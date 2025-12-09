@@ -1,0 +1,172 @@
+{{- $fullName := include "github-rate-limit-exporter.fullname" . -}}
+{{- $namespace := .Release.Namespace -}}
+{{- $serviceName := include "github-rate-limit-exporter.fullname" . -}}
+{{- $servicePort := .Values.service.port -}}
+{{- $metricsPath := .Values.exporter.metricsPath -}}
+
+ GitHub Rate Limit Exporter has been installed!
+
+ Release Information:
+   Release Name:      {{ .Release.Name }}
+   Namespace:         {{ $namespace }}
+   Chart Version:     {{ .Chart.Version }}
+   App Version:       {{ .Chart.AppVersion }}
+
+ Getting Started:
+
+1. Check the deployment status:
+
+   kubectl get pods -n {{ $namespace }} -l app.kubernetes.io/name={{ include "github-rate-limit-exporter.name" . }}
+
+2. View logs:
+
+   kubectl logs -n {{ $namespace }} -l app.kubernetes.io/name={{ include "github-rate-limit-exporter.name" . }} -f
+
+3. Access metrics locally:
+
+   kubectl port-forward -n {{ $namespace }} svc/{{ $serviceName }} {{ $servicePort }}:{{ $servicePort }}
+
+   Then visit: http://localhost:{{ $servicePort }}{{ $metricsPath }}
+
+4. Check health:
+
+   kubectl port-forward -n {{ $namespace }} svc/{{ $serviceName }} {{ $servicePort }}:{{ $servicePort }}
+   curl http://localhost:{{ $servicePort }}/health
+
+ Monitoring:
+
+{{- if .Values.serviceMonitor.enabled }}
+ ServiceMonitor enabled - Prometheus should automatically discover this exporter
+
+   Check targets in Prometheus:
+   - Open Prometheus UI
+   - Navigate to Status > Targets
+   - Look for: {{ $fullName }}
+{{- else }}
+  ServiceMonitor is disabled. To enable automatic discovery by Prometheus:
+
+   helm upgrade {{ .Release.Name }} . \
+     --set serviceMonitor.enabled=true \
+     --reuse-values
+{{- end }}
+
+{{- if .Values.prometheusRule.enabled }}
+ PrometheusRule enabled - Alerts are configured
+
+   Configured alerts:
+{{- range .Values.prometheusRule.rules }}
+   - {{ .alert }}
+{{- end }}
+
+   Check alerts in Prometheus:
+   - Open Prometheus UI
+   - Navigate to Alerts
+{{- else }}
+  PrometheusRule is disabled. To enable alerts:
+
+   helm upgrade {{ .Release.Name }} . \
+     --set prometheusRule.enabled=true \
+     --reuse-values
+{{- end }}
+
+ Security:
+
+{{- if .Values.config.existingSecret }}
+ Using existing secret: {{ .Values.config.existingSecret }}
+{{- else if .Values.githubTokens }}
+  GitHub tokens configured inline - consider using external secret management in production!
+
+   Recommended: Use Sealed Secrets, External Secrets Operator, or Vault
+{{- else if .Values.config.inline }}
+  Configuration provided inline - ensure tokens are managed securely!
+{{- else }}
+ No configuration detected! Please configure GitHub tokens.
+{{- end }}
+
+{{- if .Values.networkPolicy.enabled }}
+ Network policies enabled for enhanced security
+{{- end }}
+
+{{- if .Values.podDisruptionBudget.enabled }}
+ Pod Disruption Budget enabled for high availability
+{{- end }}
+
+ Metrics Available:
+
+Core API:
+  - github_rate_limit_core_limit
+  - github_rate_limit_core_remaining
+  - github_rate_limit_core_used
+  - github_rate_limit_core_reset_timestamp
+
+Search API:
+  - github_rate_limit_search_limit
+  - github_rate_limit_search_remaining
+  - github_rate_limit_search_used
+  - github_rate_limit_search_reset_timestamp
+
+GraphQL API:
+  - github_rate_limit_graphql_limit
+  - github_rate_limit_graphql_remaining
+  - github_rate_limit_graphql_used
+  - github_rate_limit_graphql_reset_timestamp
+
+ Useful Commands:
+
+# Get service details
+kubectl get svc -n {{ $namespace }} {{ $serviceName }}
+
+# Describe deployment
+kubectl describe deployment -n {{ $namespace }} {{ $fullName }}
+
+# Check events
+kubectl get events -n {{ $namespace }} --sort-by='.lastTimestamp'
+
+{{- if .Values.autoscaling.enabled }}
+
+# Check HPA status
+kubectl get hpa -n {{ $namespace }} {{ $fullName }}
+{{- end }}
+
+# Scale deployment (if autoscaling disabled)
+{{- if not .Values.autoscaling.enabled }}
+kubectl scale deployment -n {{ $namespace }} {{ $fullName }} --replicas=3
+{{- end }}
+
+# Update configuration
+kubectl edit secret -n {{ $namespace }} {{ include "github-rate-limit-exporter.secretName" . }}
+
+ Documentation:
+
+   Chart README:     helm/github-rate-limit-exporter/README.md
+   Project README:   https://github.com/l13t/github_rate_limit_exporter
+   Values Reference: helm/github-rate-limit-exporter/values.yaml
+
+ Troubleshooting:
+
+If pods are not starting:
+   kubectl describe pod -n {{ $namespace }} -l app.kubernetes.io/name={{ include "github-rate-limit-exporter.name" . }}
+
+If metrics are not appearing:
+   kubectl logs -n {{ $namespace }} -l app.kubernetes.io/name={{ include "github-rate-limit-exporter.name" . }}
+
+ Next Steps:
+
+1. Verify metrics are being collected
+2. Create Grafana dashboards for visualization
+3. Configure alert receivers in Alertmanager
+4. Set up token rotation procedures
+5. Monitor rate limit usage patterns
+
+{{- if not .Values.serviceMonitor.enabled }}
+
+ Quick Enable Prometheus Integration:
+
+   helm upgrade {{ .Release.Name }} . \
+     --set serviceMonitor.enabled=true \
+     --set prometheusRule.enabled=true \
+     --reuse-values \
+     -n {{ $namespace }}
+{{- end }}
+
+Thank you for using GitHub Rate Limit Exporter! 

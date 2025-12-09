@@ -10,13 +10,13 @@ Prometheus exporter for monitoring GitHub API rate limits across multiple users 
 
 ## Features
 
-- 📊 Export GitHub API rate limits as Prometheus metrics
-- 👥 Monitor multiple users/tokens simultaneously
-- 📝 Support for YAML, TOML, and HCL configuration
-- 🎯 Track Core, Search, GraphQL, and Integration Manifest limits
-- 🐳 Multi-arch Docker images (amd64, arm64, armv7)
-- 🔒 Secure, non-root execution
-- 🤖 Automatic releases on push to master
+-  Export GitHub API rate limits as Prometheus metrics
+-  Monitor multiple users/tokens simultaneously
+-  Support for YAML, TOML, and HCL configuration
+-  Track Core, Search, GraphQL, and Integration Manifest limits
+-  Multi-arch Docker images (amd64, arm64, armv7)
+-  Secure, non-root execution
+-  Automatic releases on push to master
 
 ## Quick Start
 
@@ -193,6 +193,27 @@ See [alerts.yml](alerts.yml) for complete examples.
 
 ## Deployment
 
+### Kubernetes (Helm)
+
+Deploy to Kubernetes with Prometheus Operator integration:
+
+```bash
+# Quick install
+helm install github-rate-limit-exporter ./helm/github-rate-limit-exporter \
+  --namespace monitoring \
+  --create-namespace \
+  --set githubTokens[0].name=my-user \
+  --set githubTokens[0].token=ghp_your_token
+```
+
+Features:
+-  Automatic ServiceMonitor creation
+-  Pre-configured PrometheusRule with alerts
+-  Secure by default (non-root, network policies)
+-  High availability support
+
+See [HELM_INSTALL.md](HELM_INSTALL.md) for complete guide.
+
 ### Systemd
 
 ```bash
@@ -280,7 +301,7 @@ go run ./cmd/exporter -config config.yaml
 
 ## Security
 
-- ⚠️ Never commit tokens to version control
+-  Never commit tokens to version control
 - Use secrets management in production (Vault, AWS Secrets Manager)
 - Set restrictive permissions: `chmod 600 config.yaml`
 - Run as non-root user
@@ -327,5 +348,8 @@ This project uses **automatic releases**. When you push to master with conventio
 
 - [Changelog](CHANGELOG.md) - Version history
 - [Quick Reference](QUICK_REFERENCE.md) - One-page command reference
+- [Helm Installation](HELM_INSTALL.md) - Kubernetes deployment guide
+- [Helm Chart](helm/github-rate-limit-exporter/) - Helm chart with Prometheus Operator
 - [Alert Examples](alerts.yml) - Prometheus alerting rules
+- [Auto Release Guide](AUTO_RELEASE.md) - Automatic release documentation
 - [GitHub Releases](https://github.com/l13t/github_rate_limit_exporter/releases) - Download binaries

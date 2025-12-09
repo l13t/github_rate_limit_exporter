@@ -1,0 +1,297 @@
+# Default values for github-rate-limit-exporter.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 1
+
+image:
+  repository: ghcr.io/l13t/github_rate_limit_exporter
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: ""
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+# GitHub tokens configuration
+# You can configure tokens directly in values or use existing secrets
+config:
+  # If you want to provide config inline
+  inline: {}
+    # users:
+    #   - name: "user1"
+    #     token: "ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+    #   - name: "user2"
+    #     token: "ghp_yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy"
+    # listen_addr: ":9101"
+    # metrics_path: "/metrics"
+    # poll_interval: 60
+
+  # Use existing secret containing config.yaml
+  existingSecret: ""
+  # Key in the secret that contains the config
+  existingSecretKey: "config.yaml"
+
+# GitHub tokens as a list (creates secret automatically)
+# This is the recommended approach for new deployments
+githubTokens: []
+  # - name: "personal-account"
+  #   token: "ghp_token1"
+  # - name: "ci-bot"
+  #   token: "ghp_token2"
+  # - name: "team-shared"
+  #   token: "ghp_token3"
+
+# Additional configuration options
+exporter:
+  # Port the exporter listens on
+  port: 9101
+  # Metrics endpoint path
+  metricsPath: "/metrics"
+  # Polling interval in seconds
+  pollInterval: 60
+  # Log level (debug, info, warn, error)
+  logLevel: info
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Automatically mount a ServiceAccount's API credentials?
+  automount: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+podAnnotations:
+  prometheus.io/scrape: "true"
+  prometheus.io/port: "9101"
+  prometheus.io/path: "/metrics"
+
+podLabels: {}
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  runAsGroup: 1000
+  fsGroup: 1000
+  seccompProfile:
+    type: RuntimeDefault
+
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+    - ALL
+  readOnlyRootFilesystem: true
+  runAsNonRoot: true
+  runAsUser: 1000
+
+service:
+  type: ClusterIP
+  port: 9101
+  targetPort: 9101
+  annotations: {}
+  labels: {}
+
+# Prometheus Operator ServiceMonitor
+serviceMonitor:
+  # Create ServiceMonitor resource for Prometheus Operator
+  enabled: true
+  # Additional labels for ServiceMonitor
+  additionalLabels:
+    prometheus: kube-prometheus
+  # Namespace where ServiceMonitor will be created (defaults to release namespace)
+  namespace: ""
+  # Interval at which metrics should be scraped
+  interval: 60s
+  # Timeout for scraping
+  scrapeTimeout: 30s
+  # HonorLabels chooses the metric's labels on collisions with target labels
+  honorLabels: true
+  # RelabelConfigs to apply to samples before ingestion
+  relabelings: []
+  # MetricRelabelConfigs to apply to samples before ingestion
+  metricRelabelings: []
+
+# Prometheus Operator PrometheusRule (Alerts)
+prometheusRule:
+  # Create PrometheusRule resource for alerts
+  enabled: true
+  # Additional labels for PrometheusRule
+  additionalLabels:
+    prometheus: kube-prometheus
+  # Namespace where PrometheusRule will be created (defaults to release namespace)
+  namespace: ""
+  # Alert rules
+  rules:
+    # Rate limit warning alerts
+    - alert: GitHubRateLimitLow
+      expr: github_rate_limit_core_remaining < 1000
+      for: 5m
+      labels:
+        severity: warning
+      annotations:
+        summary: "GitHub rate limit low for user {{ $labels.user }}"
+        description: "GitHub user {{ $labels.user }} has only {{ $value }} API requests remaining out of {{ $labels.limit }}. This may affect operations."
+
+    # Rate limit critical alerts
+    - alert: GitHubRateLimitCritical
+      expr: github_rate_limit_core_remaining < 100
+      for: 1m
+      labels:
+        severity: critical
+      annotations:
+        summary: "GitHub rate limit critical for user {{ $labels.user }}"
+        description: "GitHub user {{ $labels.user }} has only {{ $value }} API requests remaining. Immediate action required!"
+
+    # High usage alerts
+    - alert: GitHubRateLimitHighUsage
+      expr: (github_rate_limit_core_used / github_rate_limit_core_limit) > 0.8
+      for: 10m
+      labels:
+        severity: warning
+      annotations:
+        summary: "GitHub API usage high for user {{ $labels.user }}"
+        description: "User {{ $labels.user }} has used {{ $value | humanizePercentage }} of their rate limit."
+
+    # Search API alerts
+    - alert: GitHubSearchRateLimitLow
+      expr: github_rate_limit_search_remaining < 5
+      for: 5m
+      labels:
+        severity: warning
+      annotations:
+        summary: "GitHub search rate limit low for user {{ $labels.user }}"
+        description: "User {{ $labels.user }} has only {{ $value }} search API requests remaining."
+
+    # Exporter down alert
+    - alert: GitHubRateLimitExporterDown
+      expr: up{job="github-rate-limit-exporter"} == 0
+      for: 5m
+      labels:
+        severity: critical
+      annotations:
+        summary: "GitHub Rate Limit Exporter is down"
+        description: "The GitHub Rate Limit Exporter has been down for more than 5 minutes."
+
+resources:
+  limits:
+    cpu: 200m
+    memory: 128Mi
+  requests:
+    cpu: 50m
+    memory: 64Mi
+
+livenessProbe:
+  httpGet:
+    path: /health
+    port: http
+  initialDelaySeconds: 10
+  periodSeconds: 30
+  timeoutSeconds: 3
+  failureThreshold: 3
+
+readinessProbe:
+  httpGet:
+    path: /health
+    port: http
+  initialDelaySeconds: 5
+  periodSeconds: 10
+  timeoutSeconds: 3
+  failureThreshold: 3
+
+# Additional volumes on the output Deployment definition.
+volumes: []
+# - name: foo
+#   secret:
+#     secretName: mysecret
+#     optional: false
+
+# Additional volumeMounts on the output Deployment definition.
+volumeMounts: []
+# - name: foo
+#   mountPath: "/etc/foo"
+#   readOnly: true
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+# Pod Disruption Budget
+podDisruptionBudget:
+  enabled: false
+  minAvailable: 1
+  # maxUnavailable: 1
+
+# Horizontal Pod Autoscaler
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 3
+  targetCPUUtilizationPercentage: 80
+  targetMemoryUtilizationPercentage: 80
+
+# Priority Class
+priorityClassName: ""
+
+# Update strategy
+updateStrategy:
+  type: RollingUpdate
+  rollingUpdate:
+    maxUnavailable: 0
+    maxSurge: 1
+
+# Additional environment variables
+env: []
+  # - name: DEBUG
+  #   value: "true"
+
+# Additional environment variables from ConfigMaps or Secrets
+envFrom: []
+  # - configMapRef:
+  #     name: my-configmap
+  # - secretRef:
+  #     name: my-secret
+
+# Network Policy
+networkPolicy:
+  enabled: false
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+      - namespaceSelector:
+          matchLabels:
+            name: monitoring
+      ports:
+      - protocol: TCP
+        port: 9101
+  egress:
+    # Allow DNS
+    - to:
+      - namespaceSelector:
+          matchLabels:
+            name: kube-system
+      ports:
+      - protocol: UDP
+        port: 53
+    # Allow GitHub API
+    - to:
+      - podSelector: {}
+      ports:
+      - protocol: TCP
+        port: 443
+
+# Pod Monitor (alternative to ServiceMonitor for some setups)
+podMonitor:
+  enabled: false
+  additionalLabels: {}
+  namespace: ""
+  interval: 60s
+  scrapeTimeout: 30s
