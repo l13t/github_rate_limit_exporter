@@ -214,7 +214,7 @@ jobs:
           exit-code: "0"
 
       - name: Scan with Grype
-        uses: anchore/scan-action@v3
+        uses: anchore/scan-action@v7
         with:
           image: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:test
           fail-build: false
