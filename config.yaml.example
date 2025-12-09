@@ -1,0 +1,17 @@
+# GitHub Rate Limit Exporter Configuration (YAML)
+
+# List of GitHub users/tokens to monitor
+users:
+  - name: "user1"
+    token: "ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+
+  - name: "user2"
+    token: "ghp_yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy"
+
+  - name: "bot-account"
+    token: "ghp_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz"
+
+# HTTP server configuration
+listen_addr: ":9101"        # Address to listen on (default: :9101)
+metrics_path: "/metrics"    # Path to expose metrics (default: /metrics)
+poll_interval: 60           # Interval in seconds to poll GitHub API (default: 60)

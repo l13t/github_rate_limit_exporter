@@ -1,0 +1,487 @@
+# https://taskfile.dev
+
+version: "3"
+
+vars:
+  BINARY_NAME: github_rate_limit_exporter
+  DOCKER_IMAGE: github_rate_limit_exporter
+  VERSION:
+    sh: git describe --tags --always --dirty 2>/dev/null || echo "dev"
+  BUILD_DIR: build
+  CONFIG_FILE: config.yaml
+  GO_FILES:
+    sh: find . -name '*.go' -type f | tr '\n' ' '
+
+env:
+  CGO_ENABLED: 0
+  GO111MODULE: on
+
+tasks:
+  default:
+    desc: Display available tasks
+    cmds:
+      - task --list
+    silent: true
+
+  # Build tasks
+  build:
+    desc: Build the binary
+    deps: [deps]
+    sources:
+      - "**/*.go"
+      - go.mod
+      - go.sum
+    generates:
+      - "{{.BUILD_DIR}}/{{.BINARY_NAME}}"
+    cmds:
+      - echo "Building {{.BINARY_NAME}}..."
+      - mkdir -p {{.BUILD_DIR}}
+      - go build -trimpath -ldflags "-X main.version={{.VERSION}} -s -w" -o {{.BUILD_DIR}}/{{.BINARY_NAME}} ./cmd/exporter
+      - echo "Binary built successfully at {{.BUILD_DIR}}/{{.BINARY_NAME}}"
+
+  build:all:
+    desc: Build binaries for all platforms
+    deps: [deps]
+    cmds:
+      - echo "Building for multiple platforms..."
+      - mkdir -p {{.BUILD_DIR}}
+      - task: build:linux-amd64
+      - task: build:linux-arm64
+      - task: build:darwin-amd64
+      - task: build:darwin-arm64
+      - task: build:windows-amd64
+      - echo "All binaries built in {{.BUILD_DIR}}/"
+
+  build:linux-amd64:
+    desc: Build for Linux AMD64
+    internal: true
+    cmds:
+      - GOOS=linux GOARCH=amd64 go build -trimpath -ldflags "-X main.version={{.VERSION}} -s -w" -o {{.BUILD_DIR}}/{{.BINARY_NAME}}-linux-amd64 ./cmd/exporter
+
+  build:linux-arm64:
+    desc: Build for Linux ARM64
+    internal: true
+    cmds:
+      - GOOS=linux GOARCH=arm64 go build -trimpath -ldflags "-X main.version={{.VERSION}} -s -w" -o {{.BUILD_DIR}}/{{.BINARY_NAME}}-linux-arm64 ./cmd/exporter
+
+  build:darwin-amd64:
+    desc: Build for macOS AMD64
+    internal: true
+    cmds:
+      - GOOS=darwin GOARCH=amd64 go build -trimpath -ldflags "-X main.version={{.VERSION}} -s -w" -o {{.BUILD_DIR}}/{{.BINARY_NAME}}-darwin-amd64 ./cmd/exporter
+
+  build:darwin-arm64:
+    desc: Build for macOS ARM64
+    internal: true
+    cmds:
+      - GOOS=darwin GOARCH=arm64 go build -trimpath -ldflags "-X main.version={{.VERSION}} -s -w" -o {{.BUILD_DIR}}/{{.BINARY_NAME}}-darwin-arm64 ./cmd/exporter
+
+  build:windows-amd64:
+    desc: Build for Windows AMD64
+    internal: true
+    cmds:
+      - GOOS=windows GOARCH=amd64 go build -trimpath -ldflags "-X main.version={{.VERSION}} -s -w" -o {{.BUILD_DIR}}/{{.BINARY_NAME}}-windows-amd64.exe ./cmd/exporter
+
+  # Run tasks
+  run:
+    desc: Build and run the exporter
+    deps: [build]
+    cmds:
+      - echo "Running {{.BINARY_NAME}}..."
+      - ./{{.BUILD_DIR}}/{{.BINARY_NAME}} -config {{.CONFIG_FILE}}
+
+  dev:
+    desc: Run without building (using go run)
+    cmds:
+      - echo "Running in development mode..."
+      - go run ./cmd/exporter -config {{.CONFIG_FILE}}
+
+  # Installation
+  install:
+    desc: Install the binary to $GOPATH/bin
+    cmds:
+      - echo "Installing {{.BINARY_NAME}}..."
+      - go install -trimpath -ldflags "-X main.version={{.VERSION}} -s -w" ./cmd/exporter
+      - echo "Installed to $(go env GOPATH)/bin/exporter"
+
+  # Testing tasks
+  test:
+    desc: Run tests
+    cmds:
+      - echo "Running tests..."
+      - go test -v -race -coverprofile=coverage.out ./...
+
+  test:coverage:
+    desc: Run tests with coverage report
+    deps: [test]
+    cmds:
+      - echo "Generating coverage report..."
+      - go tool cover -html=coverage.out -o coverage.html
+      - echo "Coverage report generated at coverage.html"
+
+  test:unit:
+    desc: Run unit tests only
+    cmds:
+      - go test -v -short ./...
+
+  test:integration:
+    desc: Run integration tests
+    cmds:
+      - go test -v -run Integration ./...
+
+  bench:
+    desc: Run benchmarks
+    cmds:
+      - echo "Running benchmarks..."
+      - go test -bench=. -benchmem ./...
+
+  # Code quality tasks
+  fmt:
+    desc: Format code
+    cmds:
+      - echo "Formatting code..."
+      - go fmt ./...
+      - gofmt -s -w .
+      - echo "Code formatted successfully"
+
+  vet:
+    desc: Run go vet
+    cmds:
+      - echo "Running go vet..."
+      - go vet ./...
+
+  lint:
+    desc: Run golangci-lint
+    cmds:
+      - |
+        if command -v golangci-lint >/dev/null 2>&1; then
+          echo "Running golangci-lint..."
+          golangci-lint run ./...
+        else
+          echo "golangci-lint not installed. Install from: https://golangci-lint.run/usage/install/"
+          exit 1
+        fi
+
+  tidy:
+    desc: Tidy go.mod
+    cmds:
+      - echo "Tidying go.mod..."
+      - go mod tidy
+      - echo "go.mod tidied"
+
+  verify:
+    desc: Verify dependencies
+    cmds:
+      - go mod verify
+
+  # Dependency management
+  deps:
+    desc: Download dependencies
+    cmds:
+      - echo "Downloading dependencies..."
+      - go mod download
+    sources:
+      - go.mod
+      - go.sum
+
+  deps:update:
+    desc: Update dependencies
+    cmds:
+      - echo "Updating dependencies..."
+      - go get -u ./...
+      - go mod tidy
+      - echo "Dependencies updated"
+
+  deps:graph:
+    desc: Show dependency graph
+    cmds:
+      - go mod graph
+
+  # Cleaning tasks
+  clean:
+    desc: Clean build artifacts
+    cmds:
+      - echo "Cleaning..."
+      - rm -rf {{.BUILD_DIR}}
+      - rm -f coverage.out coverage.html
+      - go clean
+      - echo "Clean complete"
+
+  clean:all:
+    desc: Clean everything including caches
+    deps: [clean]
+    cmds:
+      - go clean -cache -testcache -modcache
+      - echo "All caches cleaned"
+
+  # Docker tasks
+  docker:build:
+    desc: Build Docker image
+    cmds:
+      - echo "Building Docker image..."
+      - docker build -t {{.DOCKER_IMAGE}}:{{.VERSION}} -t {{.DOCKER_IMAGE}}:latest .
+      - echo "Docker image built successfully"
+
+  docker:run:
+    desc: Run Docker container
+    deps: [docker:build]
+    cmds:
+      - echo "Running Docker container..."
+      - docker run -d --name {{.BINARY_NAME}} -p 9101:9101 -v $(pwd)/{{.CONFIG_FILE}}:/config.yaml:ro {{.DOCKER_IMAGE}}:latest -config /config.yaml
+      - echo "Container started. Metrics available at http://localhost:9101/metrics"
+
+  docker:stop:
+    desc: Stop Docker container
+    cmds:
+      - echo "Stopping Docker container..."
+      - docker stop {{.BINARY_NAME}} || true
+      - docker rm {{.BINARY_NAME}} || true
+      - echo "Container stopped and removed"
+
+  docker:logs:
+    desc: View Docker container logs
+    cmds:
+      - docker logs -f {{.BINARY_NAME}}
+
+  docker:push:
+    desc: Push Docker image to registry
+    cmds:
+      - docker push {{.DOCKER_IMAGE}}:{{.VERSION}}
+      - docker push {{.DOCKER_IMAGE}}:latest
+
+  # Docker Compose tasks
+  compose:up:
+    desc: Start services with docker-compose
+    cmds:
+      - echo "Starting services with docker-compose..."
+      - docker-compose up -d
+      - echo "Services started. Access points:"
+      - echo "Exporter{{":"}} http://localhost:9101/metrics"
+      - echo "Prometheus{{":"}} http://localhost:9090"
+      - echo "Grafana{{":"}} http://localhost:3000 (admin/admin)"
+
+  compose:down:
+    desc: Stop services with docker-compose
+    cmds:
+      - echo "Stopping services..."
+      - docker-compose down
+      - echo "Services stopped"
+
+  compose:logs:
+    desc: View docker-compose logs
+    cmds:
+      - docker-compose logs -f
+
+  compose:restart:
+    desc: Restart docker-compose services
+    cmds:
+      - docker-compose restart
+
+  compose:ps:
+    desc: List docker-compose services
+    cmds:
+      - docker-compose ps
+
+  # Quality checks
+  check:
+    desc: Run all checks (format, vet, test)
+    cmds:
+      - task: fmt
+      - task: vet
+      - task: test
+
+  check:all:
+    desc: Run all checks including lint
+    cmds:
+      - task: fmt
+      - task: vet
+      - task: lint
+      - task: test
+
+  pre-commit:
+    desc: Run pre-commit checks
+    cmds:
+      - task: fmt
+      - task: vet
+      - task: test
+
+  # Configuration tasks
+  config:example:
+    desc: Create a sample config.yaml from example
+    cmds:
+      - |
+        if [ ! -f {{.CONFIG_FILE}} ]; then
+          echo "Creating {{.CONFIG_FILE}} from example..."
+          cp config.yaml.example {{.CONFIG_FILE}}
+          echo "Please edit {{.CONFIG_FILE}} with your GitHub tokens"
+        else
+          echo "{{.CONFIG_FILE}} already exists"
+        fi
+
+  config:validate:
+    desc: Validate configuration file
+    deps: [build]
+    cmds:
+      - echo "Validating configuration..."
+      - ./{{.BUILD_DIR}}/{{.BINARY_NAME}} -config {{.CONFIG_FILE}} &
+      - sleep 2
+      - pkill -f {{.BINARY_NAME}} || true
+      - echo "Configuration is valid"
+
+  # Release tasks
+  release:
+    desc: Create a release build
+    cmds:
+      - task: clean
+      - task: build:all
+      - task: release:package
+
+  release:package:
+    desc: Package release binaries
+    internal: true
+    cmds:
+      - echo "Creating release packages for version {{.VERSION}}..."
+      - mkdir -p {{.BUILD_DIR}}/release
+      - cd {{.BUILD_DIR}} && tar -czf release/{{.BINARY_NAME}}-{{.VERSION}}-linux-amd64.tar.gz {{.BINARY_NAME}}-linux-amd64
+      - cd {{.BUILD_DIR}} && tar -czf release/{{.BINARY_NAME}}-{{.VERSION}}-linux-arm64.tar.gz {{.BINARY_NAME}}-linux-arm64
+      - cd {{.BUILD_DIR}} && tar -czf release/{{.BINARY_NAME}}-{{.VERSION}}-darwin-amd64.tar.gz {{.BINARY_NAME}}-darwin-amd64
+      - cd {{.BUILD_DIR}} && tar -czf release/{{.BINARY_NAME}}-{{.VERSION}}-darwin-arm64.tar.gz {{.BINARY_NAME}}-darwin-arm64
+      - cd {{.BUILD_DIR}} && zip release/{{.BINARY_NAME}}-{{.VERSION}}-windows-amd64.zip {{.BINARY_NAME}}-windows-amd64.exe
+      - echo "Release packages created in {{.BUILD_DIR}}/release/"
+
+  release:checksums:
+    desc: Generate checksums for release files
+    cmds:
+      - cd {{.BUILD_DIR}}/release && sha256sum * > checksums.txt
+      - echo "Checksums generated in {{.BUILD_DIR}}/release/checksums.txt"
+
+  # Development helpers
+  watch:
+    desc: Watch for changes and rebuild
+    cmds:
+      - |
+        echo "Watching for changes..."
+        while true; do
+          inotifywait -e modify -r . --exclude '(\.git|build)' && task build
+        done
+
+  serve:
+    desc: Build and serve with auto-reload (requires air)
+    cmds:
+      - |
+        if command -v air >/dev/null 2>&1; then
+          air
+        else
+          echo "air not installed. Install with: go install github.com/cosmtrek/air@latest"
+          exit 1
+        fi
+
+  # Information tasks
+  info:
+    desc: Display project information
+    cmds:
+      - echo "Project{{":"}} {{.BINARY_NAME}}"
+      - echo "Version{{":"}} {{.VERSION}}"
+      - echo "Go Version{{":"}} $(go version)"
+      - echo "Build Dir{{":"}} {{.BUILD_DIR}}"
+      - echo "Docker Image{{":"}} {{.DOCKER_IMAGE}}"
+
+  version:
+    desc: Show version information
+    cmds:
+      - echo "{{.VERSION}}"
+
+  # Health check
+  health:
+    desc: Check if exporter is running and healthy
+    cmds:
+      - |
+        if curl -sf http://localhost:9101/health > /dev/null; then
+          echo "Exporter is healthy"
+          exit 0
+        else
+          echo "Exporter is not responding"
+          exit 1
+        fi
+
+  metrics:
+    desc: Fetch and display current metrics
+    cmds:
+      - curl -s http://localhost:9101/metrics | grep github_rate_limit
+
+  # Security tasks
+  security:scan:
+    desc: Run security scan with gosec
+    cmds:
+      - |
+        if command -v gosec >/dev/null 2>&1; then
+          echo "Running security scan..."
+          gosec ./...
+        else
+          echo "gosec not installed. Install with: go install github.com/securego/gosec/v2/cmd/gosec@latest"
+          exit 1
+        fi
+
+  security:vuln:
+    desc: Check for vulnerabilities
+    cmds:
+      - |
+        if command -v govulncheck >/dev/null 2>&1; then
+          echo "Checking for vulnerabilities..."
+          govulncheck ./...
+        else
+          echo "govulncheck not installed. Install with: go install golang.org/x/vuln/cmd/govulncheck@latest"
+          exit 1
+        fi
+
+  # CI/CD tasks
+  ci:
+    desc: Run CI pipeline locally
+    cmds:
+      - task: deps
+      - task: fmt
+      - task: vet
+      - task: lint
+      - task: test
+      - task: build
+
+  ci:full:
+    desc: Run full CI pipeline including security checks
+    cmds:
+      - task: ci
+      - task: security:scan
+      - task: security:vuln
+
+  # Setup tasks
+  setup:
+    desc: Initial project setup
+    cmds:
+      - task: deps
+      - task: config:example
+      - echo "Setup complete! Edit {{.CONFIG_FILE}} and run 'task run'"
+
+  setup:dev:
+    desc: Setup development environment
+    cmds:
+      - task: deps
+      - echo "Installing development tools..."
+      - go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+      - go install github.com/securego/gosec/v2/cmd/gosec@latest
+      - go install golang.org/x/vuln/cmd/govulncheck@latest
+      - echo "Development environment ready!"
+
+  # Quick tasks
+  quick:
+    desc: Quick build and run (skip deps)
+    cmds:
+      - go build -o {{.BUILD_DIR}}/{{.BINARY_NAME}} ./cmd/exporter
+      - ./{{.BUILD_DIR}}/{{.BINARY_NAME}} -config {{.CONFIG_FILE}}
+
+  all:
+    desc: Build, test, and create release
+    cmds:
+      - task: clean
+      - task: deps
+      - task: check:all
+      - task: build:all
+      - echo "All tasks completed successfully!"

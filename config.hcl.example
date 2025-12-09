@@ -1,0 +1,22 @@
+# GitHub Rate Limit Exporter Configuration (HCL)
+
+# HTTP server configuration
+listen_addr   = ":9101"
+metrics_path  = "/metrics"
+poll_interval = 60
+
+# List of GitHub users/tokens to monitor
+user {
+  name  = "user1"
+  token = "ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+}
+
+user {
+  name  = "user2"
+  token = "ghp_yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy"
+}
+
+user {
+  name  = "bot-account"
+  token = "ghp_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz"
+}

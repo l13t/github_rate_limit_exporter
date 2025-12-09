@@ -1,0 +1,175 @@
+name: Feature Request
+description: Suggest a new feature or enhancement
+title: "[Feature]: "
+labels: ["enhancement", "needs-triage"]
+assignees:
+  - l13t
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for suggesting a new feature! Please fill out the sections below to help us understand your request.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem Statement
+      description: Is your feature request related to a problem? Please describe.
+      placeholder: "I'm always frustrated when..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed Solution
+      description: Describe the solution you'd like to see
+      placeholder: "I would like to be able to..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered
+      description: Describe any alternative solutions or features you've considered
+      placeholder: "I also considered..."
+    validations:
+      required: false
+
+  - type: dropdown
+    id: category
+    attributes:
+      label: Feature Category
+      description: Which area does this feature relate to?
+      options:
+        - Metrics / Prometheus
+        - Configuration
+        - Docker / Containers
+        - API / GitHub Integration
+        - Documentation
+        - Performance
+        - Security
+        - Deployment / Installation
+        - CLI / User Interface
+        - Monitoring / Alerting
+        - Other
+    validations:
+      required: true
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      description: How important is this feature to you?
+      options:
+        - Critical - Blocking my use case
+        - High - Would significantly improve my workflow
+        - Medium - Nice to have
+        - Low - Just an idea
+    validations:
+      required: true
+
+  - type: textarea
+    id: use-case
+    attributes:
+      label: Use Case
+      description: |
+        Describe your use case in detail. How would this feature benefit you and others?
+      placeholder: |
+        I need this feature because...
+        It would help me to...
+        Other users might benefit because...
+    validations:
+      required: true
+
+  - type: textarea
+    id: example
+    attributes:
+      label: Example Usage
+      description: |
+        If applicable, provide an example of how you would use this feature.
+        This could be code snippets, configuration examples, or command-line usage.
+      render: yaml
+      placeholder: |
+        # Example configuration
+        new_feature:
+          enabled: true
+          option: "value"
+    validations:
+      required: false
+
+  - type: textarea
+    id: implementation
+    attributes:
+      label: Implementation Ideas
+      description: |
+        If you have ideas about how this could be implemented, share them here.
+        This is optional but helpful!
+      placeholder: |
+        This could be implemented by...
+        We might need to add...
+    validations:
+      required: false
+
+  - type: dropdown
+    id: breaking
+    attributes:
+      label: Breaking Change
+      description: Would this feature require breaking changes to existing functionality?
+      options:
+        - "No - Fully backward compatible"
+        - "Yes - Would require breaking changes"
+        - "Maybe - Needs discussion"
+        - "Unknown"
+    validations:
+      required: true
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional Context
+      description: |
+        Add any other context, screenshots, or examples about the feature request here.
+        - Links to similar features in other projects
+        - Screenshots or mockups
+        - Related issues or discussions
+      placeholder: Add any additional context here
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: contribution
+    attributes:
+      label: Contribution
+      description: Are you willing to help implement this feature?
+      options:
+        - label: I am willing to submit a PR to implement this feature
+          required: false
+        - label: I am willing to help test this feature
+          required: false
+        - label: I am willing to help with documentation
+          required: false
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Pre-submission Checklist
+      description: Please verify the following before submitting
+      options:
+        - label: I have searched for existing feature requests
+          required: true
+        - label: This feature aligns with the project's goals
+          required: true
+        - label: I have provided enough detail for others to understand the request
+          required: true
+
+  - type: markdown
+    attributes:
+      value: |
+        ---
+
+        ### Thank you for helping improve the GitHub Rate Limit Exporter! 🚀
+
+        We'll review your feature request and discuss it with the community.

@@ -1,0 +1,112 @@
+# Prometheus Alerting Rules for GitHub Rate Limit Exporter
+
+groups:
+  - name: github_rate_limits
+    interval: 60s
+    rules:
+      # Warning when core API rate limit is getting low
+      - alert: GitHubRateLimitLow
+        expr: github_rate_limit_core_remaining < 1000
+        for: 5m
+        labels:
+          severity: warning
+          component: github_api
+        annotations:
+          summary: "GitHub API rate limit low for {{ $labels.user }}"
+          description: |
+            User {{ $labels.user }} has only {{ $value }} core API requests remaining.
+            Current usage: {{ $value }}/{{ printf "github_rate_limit_core_limit{user='%s'}" $labels.user | query | first | value }}
+
+      # Critical when core API rate limit is very low
+      - alert: GitHubRateLimitCritical
+        expr: github_rate_limit_core_remaining < 100
+        for: 1m
+        labels:
+          severity: critical
+          component: github_api
+        annotations:
+          summary: "GitHub API rate limit critical for {{ $labels.user }}"
+          description: |
+            CRITICAL: User {{ $labels.user }} has only {{ $value }} core API requests remaining.
+            Rate limit will reset at {{ printf "github_rate_limit_core_reset_timestamp{user='%s'}" $labels.user | query | first | value | humanizeTimestamp }}
+
+      # Warning when search API rate limit is getting low
+      - alert: GitHubSearchRateLimitLow
+        expr: github_rate_limit_search_remaining < 10
+        for: 5m
+        labels:
+          severity: warning
+          component: github_api
+        annotations:
+          summary: "GitHub Search API rate limit low for {{ $labels.user }}"
+          description: |
+            User {{ $labels.user }} has only {{ $value }} search API requests remaining.
+
+      # Warning when GraphQL API rate limit is getting low
+      - alert: GitHubGraphQLRateLimitLow
+        expr: github_rate_limit_graphql_remaining < 1000
+        for: 5m
+        labels:
+          severity: warning
+          component: github_api
+        annotations:
+          summary: "GitHub GraphQL API rate limit low for {{ $labels.user }}"
+          description: |
+            User {{ $labels.user }} has only {{ $value }} GraphQL API requests remaining.
+
+      # Alert when rate limit usage is above 90%
+      - alert: GitHubRateLimitHighUsage
+        expr: (github_rate_limit_core_used / github_rate_limit_core_limit) > 0.9
+        for: 10m
+        labels:
+          severity: warning
+          component: github_api
+        annotations:
+          summary: "High GitHub API usage for {{ $labels.user }}"
+          description: |
+            User {{ $labels.user }} has used {{ printf "%.1f" $value | multiply 100 }}% of their core API rate limit.
+            Remaining: {{ printf "github_rate_limit_core_remaining{user='%s'}" $labels.user | query | first | value }}
+
+      # Alert when approaching rate limit reset but still low on requests
+      - alert: GitHubRateLimitExhausted
+        expr: |
+          github_rate_limit_core_remaining < 50
+          and
+          (github_rate_limit_core_reset_timestamp - time()) < 300
+        for: 1m
+        labels:
+          severity: warning
+          component: github_api
+        annotations:
+          summary: "GitHub API rate limit nearly exhausted for {{ $labels.user }}"
+          description: |
+            User {{ $labels.user }} has {{ $value }} requests remaining with less than 5 minutes until reset.
+
+      # Alert when exporter might be down or unable to collect metrics
+      - alert: GitHubRateLimitExporterDown
+        expr: up{job="github_rate_limits"} == 0
+        for: 5m
+        labels:
+          severity: critical
+          component: exporter
+        annotations:
+          summary: "GitHub Rate Limit Exporter is down"
+          description: |
+            The GitHub Rate Limit Exporter has been down for more than 5 minutes.
+            Metrics collection is not working.
+
+      # Alert when metrics are stale
+      - alert: GitHubRateLimitMetricsStale
+        expr: |
+          (time() - github_rate_limit_core_reset_timestamp) > 3600
+          and
+          github_rate_limit_core_remaining == github_rate_limit_core_limit
+        for: 10m
+        labels:
+          severity: warning
+          component: exporter
+        annotations:
+          summary: "GitHub rate limit metrics may be stale for {{ $labels.user }}"
+          description: |
+            The rate limit metrics for {{ $labels.user }} haven't changed in over an hour,
+            which may indicate the exporter is not updating properly.

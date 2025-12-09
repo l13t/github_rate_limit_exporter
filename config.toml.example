@@ -1,0 +1,19 @@
+# GitHub Rate Limit Exporter Configuration (TOML)
+
+# HTTP server configuration
+listen_addr = ":9101"
+metrics_path = "/metrics"
+poll_interval = 60
+
+# List of GitHub users/tokens to monitor
+[[users]]
+name = "user1"
+token = "ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+
+[[users]]
+name = "user2"
+token = "ghp_yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy"
+
+[[users]]
+name = "bot-account"
+token = "ghp_zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz"

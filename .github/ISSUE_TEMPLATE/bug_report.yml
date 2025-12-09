@@ -1,0 +1,187 @@
+name: Bug Report
+description: Report a bug or unexpected behavior
+title: "[Bug]: "
+labels: ["bug", "needs-triage"]
+assignees:
+  - l13t
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug! Please fill out the sections below to help us fix the issue.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Bug Description
+      description: A clear and concise description of what the bug is.
+      placeholder: Tell us what happened
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: What did you expect to happen?
+      placeholder: Tell us what you expected
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual Behavior
+      description: What actually happened?
+      placeholder: Tell us what actually happened
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to Reproduce
+      description: Steps to reproduce the behavior
+      placeholder: |
+        1. Run command '...'
+        2. Access endpoint '...'
+        3. See error
+      value: |
+        1.
+        2.
+        3.
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: What version of the exporter are you using?
+      placeholder: "e.g., v1.0.0, commit SHA, or 'latest'"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: deployment
+    attributes:
+      label: Deployment Method
+      description: How are you running the exporter?
+      options:
+        - Binary (standalone)
+        - Docker
+        - Docker Compose
+        - Kubernetes
+        - Systemd service
+        - Other (please specify in additional context)
+    validations:
+      required: true
+
+  - type: input
+    id: os
+    attributes:
+      label: Operating System
+      description: What operating system are you using?
+      placeholder: "e.g., Ubuntu 22.04, macOS 14.0, Windows 11"
+    validations:
+      required: true
+
+  - type: input
+    id: go-version
+    attributes:
+      label: Go Version (if building from source)
+      description: Output of `go version`
+      placeholder: "e.g., go1.21.5 linux/amd64"
+    validations:
+      required: false
+
+  - type: dropdown
+    id: config-format
+    attributes:
+      label: Configuration Format
+      description: Which configuration file format are you using?
+      options:
+        - YAML
+        - TOML
+        - HCL
+    validations:
+      required: false
+
+  - type: textarea
+    id: config
+    attributes:
+      label: Configuration File
+      description: |
+        Please paste your configuration file (with tokens redacted).
+        This will be automatically formatted as YAML.
+      render: yaml
+      placeholder: |
+        users:
+          - name: "user1"
+            token: "ghp_REDACTED"
+        listen_addr: ":9101"
+    validations:
+      required: false
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Error Logs
+      description: |
+        Please paste relevant log output or error messages.
+        This will be automatically formatted as a code block.
+      render: shell
+      placeholder: Paste logs here
+    validations:
+      required: false
+
+  - type: textarea
+    id: metrics
+    attributes:
+      label: Metrics Output (if relevant)
+      description: |
+        If the issue is related to metrics, paste the output of `curl http://localhost:9101/metrics`
+      render: text
+      placeholder: Paste metrics output here
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional Context
+      description: |
+        Add any other context about the problem here.
+        - Screenshots
+        - Related issues
+        - Environment details
+        - Network configuration
+        - Firewall settings
+      placeholder: Add any additional context here
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Pre-submission Checklist
+      description: Please verify the following before submitting
+      options:
+        - label: I have searched for existing issues
+          required: true
+        - label: I have redacted all sensitive information (tokens, passwords, etc.)
+          required: true
+        - label: I am using a supported version
+          required: true
+        - label: I have included all relevant information above
+          required: true
+
+  - type: markdown
+    attributes:
+      value: |
+        ---
+
+        ### Thank you for helping improve the GitHub Rate Limit Exporter! 🙏
+
+        We'll review your bug report and get back to you as soon as possible.
