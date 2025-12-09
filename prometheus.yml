@@ -1,3 +1,4 @@
+---
 # Prometheus configuration for GitHub Rate Limit Exporter
 
 global:
@@ -5,7 +6,7 @@ global:
   evaluation_interval: 60s
   scrape_timeout: 10s
   external_labels:
-    monitor: 'github-rate-limits'
+    monitor: "github-rate-limits"
 
 # Alertmanager configuration (optional)
 # alerting:
@@ -21,16 +22,16 @@ rule_files:
 # Scrape configurations
 scrape_configs:
   # GitHub Rate Limit Exporter
-  - job_name: 'github_rate_limits'
+  - job_name: "github_rate_limits"
     scrape_interval: 60s
     scrape_timeout: 10s
     static_configs:
-      - targets: ['github_rate_limit_exporter:9101']
+      - targets: ["github_rate_limit_exporter:9101"]
         labels:
-          service: 'github-rate-limit-exporter'
-          environment: 'production'
+          service: "github-rate-limit-exporter"
+          environment: "production"
 
   # Prometheus self-monitoring
-  - job_name: 'prometheus'
+  - job_name: "prometheus"
     static_configs:
-      - targets: ['localhost:9090']
+      - targets: ["localhost:9090"]
