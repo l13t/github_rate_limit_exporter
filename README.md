@@ -1,6 +1,7 @@
 # GitHub Rate Limit Exporter
 
 [![CI](https://github.com/l13t/github_rate_limit_exporter/workflows/CI/badge.svg)](https://github.com/l13t/github_rate_limit_exporter/actions/workflows/ci.yml)
+[![Auto Release](https://github.com/l13t/github_rate_limit_exporter/workflows/Auto%20Release/badge.svg)](https://github.com/l13t/github_rate_limit_exporter/actions/workflows/auto-release.yml)
 [![Docker](https://github.com/l13t/github_rate_limit_exporter/workflows/Docker/badge.svg)](https://github.com/l13t/github_rate_limit_exporter/actions/workflows/docker.yml)
 [![Go Report Card](https://goreportcard.com/badge/github.com/l13t/github_rate_limit_exporter)](https://goreportcard.com/report/github.com/l13t/github_rate_limit_exporter)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -15,6 +16,7 @@ Prometheus exporter for monitoring GitHub API rate limits across multiple users 
 - 🎯 Track Core, Search, GraphQL, and Integration Manifest limits
 - 🐳 Multi-arch Docker images (amd64, arm64, armv7)
 - 🔒 Secure, non-root execution
+- 🤖 Automatic releases on push to master
 
 ## Quick Start
 
@@ -316,6 +318,10 @@ Contributions welcome! See [CONTRIBUTING.md](CONTRIBUTING.md).
 ## License
 
 MIT License - see [LICENSE](LICENSE) file.
+
+## Releases
+
+This project uses **automatic releases**. When you push to master with conventional commit messages, a new release is automatically created.
 
 ## Resources
 
