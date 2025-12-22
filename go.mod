@@ -3,7 +3,7 @@ module github.com/l13t/github_rate_limit_exporter
 go 1.25
 
 require (
-	github.com/BurntSushi/toml v1.5.0
+	github.com/BurntSushi/toml v1.6.0
 	github.com/google/go-github/v57 v57.0.0
 	github.com/hashicorp/hcl/v2 v2.24.0
 	github.com/prometheus/client_golang v1.23.2
