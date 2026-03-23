@@ -331,7 +331,7 @@ jobs:
           echo "version=${VERSION}" >> $GITHUB_OUTPUT
 
       - name: Update Homebrew tap
-        uses: mislav/bump-homebrew-formula-action@v3
+        uses: mislav/bump-homebrew-formula-action@v4
         if: secrets.HOMEBREW_TAP_TOKEN != ''
         with:
           formula-name: github-rate-limit-exporter
