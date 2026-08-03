@@ -30,7 +30,7 @@ jobs:
       is_new_version: ${{ steps.check.outputs.is_new }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
@@ -128,10 +128,10 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Set up Go
-        uses: actions/setup-go@v6
+        uses: actions/setup-go@v7
         with:
           go-version: ${{ env.GO_VERSION }}
           cache: true
@@ -187,7 +187,7 @@ jobs:
     if: needs.determine-version.outputs.is_new_version == 'true'
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v4
@@ -234,7 +234,7 @@ jobs:
     if: needs.determine-version.outputs.is_new_version == 'true'
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
